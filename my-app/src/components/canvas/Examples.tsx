@@ -68,31 +68,53 @@ export function Dog(props) {
 
 // ... existing code ...
 
+// ... existing code ...
+
 export function Avatar(props) {
   const { scene } = useGLTF('/avatar.glb')
   const { mouse } = useThree()  // Assuming useThree is imported; add if not
-  const headBone = useRef()  // Ref for the head bone
+  const headBone = useRef()  // Existing ref for head
+  const leftEyeBone = useRef()  // New ref for LeftEye
+  const rightEyeBone = useRef()  // New ref for RightEye
 
-  // Traverse to find the head bone (replace 'Head' with actual bone name from your model; log scene.children to check)
+  // Traverse to find the head and eye bones
   useEffect(() => {
     scene.traverse((child) => {
-      if (child.isBone && child.name === 'Head') {  // Common bone name; adjust based on your GLB
-        headBone.current = child
+      if (child.isBone) {
+        if (child.name === 'Head') {
+          headBone.current = child
+        } else if (child.name === 'LeftEye') {
+          leftEyeBone.current = child
+        } else if (child.name === 'RightEye') {
+          rightEyeBone.current = child
+        }
       }
     })
   }, [scene])
 
   useFrame(() => {
+    // Existing head rotation
     if (headBone.current) {
-      // Rotate head yaw based on mouse x (left/right); adjust multiplier for sensitivity
       headBone.current.rotation.y = mouse.x * Math.PI / 4
-      // Optional: pitch based on mouse y (up/down)
       headBone.current.rotation.x = -mouse.y * Math.PI / 6
+    }
+
+    // Eye rotations: Apply similar yaw/pitch to make them "follow" the mouse
+    // Adjust multipliers for sensitivity; eyes usually have smaller range
+    if (leftEyeBone.current) {
+      leftEyeBone.current.rotation.y = mouse.x * Math.PI / 6  // Yaw (left/right)
+      leftEyeBone.current.rotation.x = -mouse.y * Math.PI / 8  // Pitch (up/down); adjust sign if needed
+    }
+    if (rightEyeBone.current) {
+      rightEyeBone.current.rotation.y = mouse.x * Math.PI / 6  // Yaw (left/right)
+      rightEyeBone.current.rotation.x = -mouse.y * Math.PI / 8  // Pitch (up/down); adjust sign if needed
     }
   })
 
   return <primitive object={scene} {...props} />
 }
+
+// ... existing code ...
 
 // ... existing code ...
 
