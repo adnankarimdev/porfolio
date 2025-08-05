@@ -70,14 +70,17 @@ export function Dog(props) {
 
 // ... existing code ...
 
+// ... existing code ...
+
 export function Avatar(props) {
   const { scene } = useGLTF('/avatar.glb')
   const { mouse } = useThree()  // Assuming useThree is imported; add if not
   const headBone = useRef()  // Existing ref for head
-  const leftEyeBone = useRef()  // New ref for LeftEye
-  const rightEyeBone = useRef()  // New ref for RightEye
+  const leftEyeBone = useRef()  // Existing ref for LeftEye
+  const rightEyeBone = useRef()  // Existing ref for RightEye
+  const headMesh = useRef()  // New ref for head mesh with morph targets
 
-  // Traverse to find the head and eye bones
+  // Traverse to find bones, meshes, and hide non-head parts
   useEffect(() => {
     scene.traverse((child) => {
       if (child.isBone) {
@@ -88,41 +91,50 @@ export function Avatar(props) {
         } else if (child.name === 'RightEye') {
           rightEyeBone.current = child
         }
+      } else if (child.isMesh) {
+
+        // Find head mesh with morph targets (adjust name/condition based on your model)
+        if (child.morphTargetDictionary && child.name.includes('Head')) {  // e.g., if mesh is 'HeadMesh'
+          headMesh.current = child
+          console.log('Morph targets found:', Object.keys(child.morphTargetDictionary))  // Log to identify mouth target
+        }
       }
     })
   }, [scene])
 
+  // New function to simulate talking: Oscillates mouth morph target (assumes target named 'mouthOpen'; replace with actual from logs)
+  const simulateTalking = () => {
+    if (headMesh.current && headMesh.current.morphTargetInfluences) {
+      const mouthIndex = headMesh.current.morphTargetDictionary['mouthOpen']  // Replace 'mouthOpen' with actual target name
+      if (mouthIndex !== undefined) {
+        // Simple oscillation for talking simulation (0 to 1 influence)
+        headMesh.current.morphTargetInfluences[mouthIndex] = Math.abs(Math.sin(Date.now() * 0.005))  // Adjust speed with multiplier
+      }
+    }
+  }
+
   useFrame(() => {
+    // Call the talking simulation every frame (remove if you want to trigger conditionally)
+    // simulateTalking()
+
     // Existing head rotation
     if (headBone.current) {
       headBone.current.rotation.y = mouse.x * Math.PI / 4
-      headBone.current.rotation.x = -mouse.y * Math.PI / 6
+      // Optional: headBone.current.rotation.x = -mouse.y * Math.PI / 6
     }
 
-    // Eye rotations: Apply similar yaw/pitch to make them "follow" the mouse
-    // Adjust multipliers for sensitivity; eyes usually have smaller range
+    // Existing eye rotations
     if (leftEyeBone.current) {
-      leftEyeBone.current.rotation.y = mouse.x * Math.PI / 6  // Yaw (left/right)
-      leftEyeBone.current.rotation.x = -mouse.y * Math.PI / 8  // Pitch (up/down); adjust sign if needed
+      leftEyeBone.current.rotation.y = mouse.x * Math.PI / 6
+      leftEyeBone.current.rotation.x = -mouse.y * Math.PI / 8
     }
     if (rightEyeBone.current) {
-      rightEyeBone.current.rotation.y = mouse.x * Math.PI / 6  // Yaw (left/right)
-      rightEyeBone.current.rotation.x = -mouse.y * Math.PI / 8  // Pitch (up/down); adjust sign if needed
+      rightEyeBone.current.rotation.y = mouse.x * Math.PI / 6
+      rightEyeBone.current.rotation.x = -mouse.y * Math.PI / 8
     }
   })
 
   return <primitive object={scene} {...props} />
 }
-
-// ... existing code ...
-
-// ... existing code ...
-
-// ... existing code ...
-
-
-// ... existing code (skip to Avatar function) ...
-
-
 
 // ... existing code ...
